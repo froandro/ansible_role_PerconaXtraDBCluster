@@ -1,0 +1,8 @@
+---
+# defaults file for roles/ansible_role_PerconaXtraDBCluster
+cluster_name: "ansible-cluster"
+percona_url: "https://repo.percona.com/apt/"
+percona_package: "percona-release_latest.generic_all.deb"
+percona_cluster_server: "192.168.60.101"
+percona_cluster_node1: "192.168.60.201"
+percona_cluster_node2: "192.168.60.202"

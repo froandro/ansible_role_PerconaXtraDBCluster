@@ -1,0 +1,58 @@
+---
+- name: Update cache and install packages
+  become: true
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    update_cache: true
+  with_items:
+    - "wget" 
+    - "gnupg2"
+    - "lsb-release"
+    - "curl"
+  
+- name: Allow ports
+  become: true
+  community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+  with_items:
+    - "3306" 
+    - "4444"
+    - "4567"
+    - "4568"
+ 
+- name: Install "{{ percona_package }}" from the internet
+  become: true
+  ansible.builtin.apt:
+    deb: "{{ percona_url }}{{ percona_package }}"
+
+- name: Update cache
+  become: true
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: Enable the repository for Percona XtraDB Cluster
+  become: true
+  ansible.builtin.shell: "percona-release setup pxc80"
+
+- name: Create /etc/mysql directory if it does not exist
+  become: true
+  ansible.builtin.file:
+    path: "/etc/mysql"
+    state: directory
+    mode: "0755"
+
+- name: Create fallback file so dpkg doesnt fail
+  become: true
+  ansible.builtin.file:
+    path: "/etc/mysql/my.cnf.fallback"
+    state: touch    
+
+- name: Install the Percona XtraDB Cluster
+  become: true
+  ansible.builtin.apt:
+    name: "percona-xtradb-cluster"
+    install_recommends: true
+    state: present
+ 
+

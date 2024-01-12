@@ -1,0 +1,17 @@
+---
+# tasks file for ansible_role_PerconaXtraDBCluster
+
+- name: Percona install
+  import_tasks: percona_install.yml
+  #  when: inventory_hostname in groups['percona_node1']
+
+- name: Configure nodes
+  any_errors_fatal: true
+  import_tasks: configure_nodes.yml
+
+- name: Add nodes
+  any_errors_fatal: true
+  import_tasks: boot_first_node_and_add_nodes.yml
+
+
+ 

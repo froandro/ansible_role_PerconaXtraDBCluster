@@ -1,0 +1,32 @@
+- name: Start "mysql@bootstrap.service" on first node
+  become: true
+  ansible.builtin.systemd:
+    name: "mysql@bootstrap.service"
+    state: started
+  when: inventory_hostname in groups['percona_server']
+
+- name: Start "mysql.service" on nodes
+  become: true
+  throttle: 1
+  ansible.builtin.systemd:
+    name: "mysql.service"
+    state: started
+  when: inventory_hostname not in groups['percona_server']
+
+- name: Wait for the cluster to sync
+  ansible.builtin.pause:
+    seconds: 30 
+
+- name: Stop "mysql@bootstrap.service" on first node
+  become: true
+  ansible.builtin.systemd:
+    name: "mysql@bootstrap.service"
+    state: stopped
+  when: inventory_hostname in groups['percona_server']
+
+- name: Start "mysql.service" on first node
+  become: true
+  ansible.builtin.systemd:
+    name: "mysql.service"
+    state: started
+  when: inventory_hostname in groups['percona_server']

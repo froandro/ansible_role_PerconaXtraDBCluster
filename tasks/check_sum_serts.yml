@@ -1,0 +1,25 @@
+- name: Get checksum of "{{ item }} {{ percona_cluster_server }}" 
+  become: true
+  ansible.builtin.stat:
+    path: "/var/lib/mysql/{{ item }}"
+  register: myfirstfile
+  delegate_to: "{{ percona_cluster_server }}"
+
+- name: Current SHA1
+  ansible.builtin.set_fact:
+    mf1sha1: "{{ myfirstfile.stat.checksum }}"
+
+- name: Get checksum of "{{ item }}"
+  become: true
+  ansible.builtin.stat:
+    path : "/var/lib/mysql/{{ item }}"
+  register: mysecondfile
+
+- name: Current SHA1
+  ansible.builtin.set_fact:
+    mf2sha1: "{{ mysecondfile.stat.checksum }}"
+
+- name: Compilation Changed
+  ansible.builtin.debug:
+    msg: "File Compare"
+  failed_when:  mf2sha1 != mf1sha1

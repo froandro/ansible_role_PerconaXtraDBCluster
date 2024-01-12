@@ -1,0 +1,49 @@
+---
+- name: Stop mysql service
+  become: true
+  ansible.builtin.service:
+    name: "mysql"
+    state: stopped
+
+- name: Configuration "/etc/mysql/mysql.conf.d/mysqld.cnf"
+  become: true
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "/etc/mysql/mysql.conf.d/mysqld.cnf"
+  with_items:
+    - { src: mysqld.j2, node: percona_server }
+    - { src: mysqld_node1.j2, node: percona_node1 }
+    - { src: mysqld_node2.j2, node: percona_node2 }
+  when: item.node in group_names
+
+- name: Fetch sertificates from percona-server
+  become: true
+  ansible.builtin.fetch:
+    src: "/var/lib/mysql/{{ item }}"
+    dest: "/tmp/"
+    flat: true
+  with_items:
+    - server-key.pem
+    - ca.pem
+    - server-cert.pem
+  when: inventory_hostname in groups['percona_server']
+
+- name: Copy sertificates to nodes
+  become: true
+  ansible.builtin.copy:
+    src: "/tmp/{{ item }}"
+    dest: "/var/lib/mysql/"
+    owner: "mysql"
+    group: "mysql"
+  with_items:
+    - server-key.pem
+    - ca.pem
+    - server-cert.pem
+  when: inventory_hostname not in groups['percona_server']
+
+- name: Verify serts checksums
+  include_tasks: check_sum_serts.yml 
+  with_items:
+    - server-key.pem
+    - ca.pem
+    - server-cert.pem
